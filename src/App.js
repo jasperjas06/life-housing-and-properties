@@ -34,17 +34,27 @@ function App() {
     cedName: "",
     diamountDirectorName: "",
     diamountDirectorPhone: "",
+    photo: null, // <-- Added photo field
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "number" ? value.replace(/\D/g, "") : value,
-    }));
+    const { name, value, type, files } = e.target;
+
+    if (type === "file") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: files[0], // store uploaded file
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "number" ? value.replace(/\D/g, "") : value,
+      }));
+    }
+
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -57,7 +67,7 @@ function App() {
       "fatherOrHusbandName", "motherName", "nomineeName", "nomineeAge",
       "nomineeRelationship", "nameOfGuardian", "so_wf_do", "relationshipWithCustomer",
       "address", "introducerName", "introducerMobileNo", "immSupervisorName",
-      "cedName", "diamountDirectorName", "diamountDirectorPhone"
+      "cedName", "diamountDirectorName", "diamountDirectorPhone", "photo"
     ];
 
     requiredFields.forEach(field => {
@@ -94,12 +104,16 @@ function App() {
 
     setIsSubmitting(true);
     try {
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
+
       const response = await fetch(
         "https://customer-form-8auo.onrender.com/api/plot/booking/create",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: data, // send as multipart/form-data
         }
       );
 
@@ -221,6 +235,27 @@ function App() {
                 />
                 {errors.nationality && <span className="error">{errors.nationality}</span>}
               </div>
+            </div>
+
+            {/* Photo Upload */}
+            <div className="input-field">
+              <label>Passport Size Photo</label>
+              <input
+                type="file"
+                name="photo"
+                accept="image/*"
+                onChange={handleChange}
+              />
+              {formData.photo && (
+                <div className="photo-preview">
+                  <img
+                    src={URL.createObjectURL(formData.photo)}
+                    alt="Passport Preview"
+                    className="preview-img"
+                  />
+                </div>
+              )}
+              {errors.photo && <span className="error">{errors.photo}</span>}
             </div>
 
             <div className="grid-2">
